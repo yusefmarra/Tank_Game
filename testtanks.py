@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 from load_images import *
+import random
 
 
 
@@ -10,8 +11,8 @@ class Shell(pygame.sprite.Sprite):
         self.image, self.rect = load_image('shell.bmp', -1)
         self.rect.center = initial_pos
         self.orientation = rotation
-    def update(self):
-        
+    def update(self, enemy_rect):
+
         if self.orientation == 360 or self.orientation == 0:
             self.rect.move_ip(0,-15)
         elif self.orientation == 30 or self.orientation == 390:
@@ -35,10 +36,11 @@ class Shell(pygame.sprite.Sprite):
         elif self.orientation == 300 or self.orientation == -60:
             self.rect.move_ip(-12.9,-7.5)
         elif self.orientation == 330 or self.orientation == -30:
-            self.rect.move_ip(-7.5,-12.9)       
-        
-        
-        
+            self.rect.move_ip(-7.5,-12.9)
+
+        if self.rect.colliderect(enemy_rect):
+            print "Got a hit"
+
         if self.rect.left < 0:
             self.kill()
         elif self.rect.right > 640:
@@ -61,7 +63,7 @@ class Turret(pygame.sprite.Sprite):
         self.isShooting = 0
         self.shells = pygame.sprite.Group()
         self.isFlashing = 0
-        
+
     def update(self, center, rotation, input = ''):
         if input == 'tRight' or input == 'tLeft':
             self._rotate(rotation, input)
@@ -70,7 +72,7 @@ class Turret(pygame.sprite.Sprite):
         if self.isShooting:
             self._shoot()
         #screen.blit(self.image, self.rect)
-        
+
     def _rotate(self, rotation, direction = ''):
         #Track the offset from the chassis rotation
         if direction == 'tRight':
@@ -108,8 +110,8 @@ class Turret(pygame.sprite.Sprite):
             self.rotationOffset = 150
         elif self.rotationOffset > 180:
             self.rotationOffset = -150
-        
-        
+
+
 
     def _shoot(self):
         if self.flashImages:
@@ -136,13 +138,13 @@ class Turret(pygame.sprite.Sprite):
             elif self.rotationCounter == 300 or self.rotationCounter == -60:
                 self.flash = pygame.transform.flip(self.flashImages[2], 1, 0)
             elif self.rotationCounter == 330 or self.rotationCounter == -30:
-                self.flash = pygame.transform.flip(self.flashImages[1], 1, 0)            
-        
+                self.flash = pygame.transform.flip(self.flashImages[1], 1, 0)
+
         self.isFlashing = 1
-        
-           
-            
-            
+
+
+
+
         self.shells.add(Shell(self.rect.center, self.rotationCounter))
         self.isShooting = 0
 
@@ -156,12 +158,12 @@ class Tank(pygame.sprite.Sprite):
         self.rect.center = initial_pos
         self.turret = Turret(initial_pos)
         self.rotationCounter = 360
-        
+
     def update(self, pressed):
         #move the tank
         #self.rect.move_ip((self.x_velocity, self.y_velocity))
         #Keep it inside the screen
-        
+
         if pressed[K_UP] and pressed[K_LEFT]:
             self._move()
             self._rotate('left')
@@ -171,7 +173,7 @@ class Tank(pygame.sprite.Sprite):
         elif pressed[K_DOWN] and pressed[K_LEFT]:
             self._reverse()
             self._rotate('left')
-        
+
         elif pressed[K_DOWN] and pressed[K_RIGHT]:
             self._reverse()
             self._rotate('right')
@@ -192,11 +194,11 @@ class Tank(pygame.sprite.Sprite):
         #shells.add(Shell(t.turret.rect.center, t.turret.rotationCounter))
         #shell1 = Shell(t.turret.rect.center, t.turret.rotationCounter)
         #Shell(t.turret.rect.center, t.turret.rotationCounter).add(shells)
-        
-        
-        
-        
-        
+
+
+
+
+        #Keep the Player on the screen
         if self.rect.left < 0:
             self.rect.left = 0
         elif self.rect.right > 640:
@@ -205,11 +207,11 @@ class Tank(pygame.sprite.Sprite):
             self.rect.top = 0
         elif self.rect.bottom >= 480:
             self.rect.bottom = 480
-        
-                
+
+
         self.turret.update(self.rect.center, self.rotationCounter)
-        
-        
+
+
     def _move(self):
         if self.rotationCounter == 0 or self.rotationCounter == 360:
             self.rect.move_ip(0,-5)
@@ -235,9 +237,9 @@ class Tank(pygame.sprite.Sprite):
             self.rect.move_ip(-4.3,-2.5)
         elif self.rotationCounter == 330:
             self.rect.move_ip(-2.5,-4.3)
-        
 
-    
+
+
     def _rotate(self, direction):
         #Track the amount of rotation
         if direction == 'right':
@@ -246,7 +248,7 @@ class Tank(pygame.sprite.Sprite):
         elif direction == 'left':
             self.rotationCounter -=30
             self.turret.update(self.rect.center, self.rotationCounter)
-            
+
         #Display the proper images based on the position of the rotation counter
         if self.rotationCounter == 360 or self.rotationCounter == 0:
             self.image = self.images[0]
@@ -272,13 +274,13 @@ class Tank(pygame.sprite.Sprite):
             self.image = pygame.transform.flip(self.images[2], 1, 0)
         elif self.rotationCounter == 330 or self.rotationCounter < 0:
             self.image = pygame.transform.flip(self.images[1], 1, 0)
-        
+
         #Keep it under 360
         if self.rotationCounter > 360:
             self.rotationCounter = 30
         elif self.rotationCounter < 0:
             self.rotationCounter = 330
-        
+
 
 
     def _reverse(self):
@@ -312,3 +314,28 @@ class Tank(pygame.sprite.Sprite):
 
     def stop(self):
         pass
+
+
+class TankAI(Tank):
+    def __init__(self, initial_pos):
+        Tank.__init__(self, initial_pos)
+        self.directions = ('left','right', '', '', '', '', '', '')
+
+    def update(self):
+        random_move = self.directions[random.randint(0,7)]
+        if random_move:
+            self._rotate(random_move)
+
+        self._move()
+
+        #Keep the AI on the screen
+        if self.rect.left < 0:
+            self._rotate('right')
+        elif self.rect.right > 640:
+            self._rotate('left')
+        if self.rect.top <= 0:
+            self._rotate('left')
+        elif self.rect.bottom >= 480:
+            self._rotate('left')
+
+        self.turret.update(self.rect.center, self.rotationCounter)
