@@ -16,6 +16,9 @@ player_sprites.add(t)
 AI_sprites = pygame.sprite.Group()
 AI_sprites.add(t_AI)
 
+for i in range(50):
+    AI_sprites.add(TankAI(screen, [random.randint(200, 1000),random.randint(200,700)]))
+
 running = 1
 #pygame.key.set_repeat(100, 200)
 clock = pygame.time.Clock()

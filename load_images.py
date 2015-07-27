@@ -14,7 +14,7 @@ def load_images(names, colorkey=None):
         image = image.convert()
         if colorkey is not None:
             if colorkey is -1:
-                colorkey = image.get_at((0,0))
+                colorkey = image.get_at((5,5))
             image.set_colorkey(colorkey, RLEACCEL)
         images.append(image)
     return images
@@ -29,6 +29,6 @@ def load_image(name, colorkey=None):
     image = image.convert()
     if colorkey is not None:
         if colorkey is -1:
-            colorkey = image.get_at((0,0))
+            colorkey = image.get_at((5,5))
         image.set_colorkey(colorkey, RLEACCEL)
-    return image, image.get_rect()
+    return image

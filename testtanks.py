@@ -3,13 +3,16 @@ from pygame.locals import *
 from pygame.sprite import spritecollide
 from load_images import *
 import random
+import SpriteSheet
+from SpriteSheet import SpriteStripAnim
 
 
 
 class Shell(pygame.sprite.Sprite):
     def __init__(self, initial_pos, rotation):
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image('shell.bmp', -1)
+        self.image = load_image('shell.bmp', -1)
+        self.rect = self.image.get_rect()
         self.rect.center = initial_pos
         self.orientation = rotation
     def update(self):
@@ -163,7 +166,7 @@ class Tank(pygame.sprite.Sprite):
     def __init__(self, screen, initial_pos):
         pygame.sprite.Sprite.__init__(self)
         self.images = load_images(['TankBase1.bmp','TankBase2.bmp','TankBase3.bmp','TankBase4.bmp'], -1)
-        self.explosion = load_image('explode.bmp', -1)
+        self.explosion = SpriteStripAnim('Explode3.bmp', (0,0,48,48), 4, -1, True, 10) + SpriteStripAnim('Explode3.bmp', (48,48,48,48), 4, -1, True, 10),
         self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.center = initial_pos
@@ -327,11 +330,15 @@ class Tank(pygame.sprite.Sprite):
             self.rect.move_ip(2.5,4.3)
 
     def _die(self):
-        self.screen.blit(self.explosion[0], self.rect.topleft)
-        self.screen.blit(self.explosion[0], self.rect.bottomright)
-        self.screen.blit(self.explosion[0], self.rect.center)
-        self.screen.blit(self.explosion[0], self.rect.topright)
-        self.screen.blit(self.explosion[0], self.rect.bottomleft)
+        # self.screen.blit(self.explosion[0], self.rect.topleft)
+        # self.screen.blit(self.explosion[0], self.rect.bottomright)
+        # self.screen.blit(self.explosion[0], self.rect.center)
+        # self.screen.blit(self.explosion[0], self.rect.topright)
+        # self.screen.blit(self.explosion[0], self.rect.bottomleft)
+        n = 0
+        self.explosion[n].iter()
+        image = self.explosion[n].next()
+        self.screen.blit(image, self.rect.topleft)
         self.kill()
 
     def _shoot(self):
