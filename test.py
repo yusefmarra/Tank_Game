@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 from testtanks import Tank, TankAI
+import random
 
 pygame.init()
 screen = pygame.display.set_mode([1024, 768])
@@ -38,10 +39,13 @@ while running:
     player_sprites.update(pressed)
     AI_sprites.update(t.turret.shells)
 
+    if not AI_sprites:
+        AI_sprites.add(TankAI(screen, [random.randint(200, 1000),random.randint(200,700)]))
+
 
     if pygame.font:
         font = pygame.font.Font(None, 36)
-        text = font.render(str(t.turret.rotationCounter), 1, (10, 10, 10))
+        text = font.render(str(clock.get_rawtime()), 1, (10, 10, 10))
         textpos = text.get_rect(centerx=screen.get_width()/2)
         screen.blit(text, textpos)
 

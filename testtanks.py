@@ -163,6 +163,7 @@ class Tank(pygame.sprite.Sprite):
     def __init__(self, screen, initial_pos):
         pygame.sprite.Sprite.__init__(self)
         self.images = load_images(['TankBase1.bmp','TankBase2.bmp','TankBase3.bmp','TankBase4.bmp'], -1)
+        self.explosion = load_image('explode.bmp', -1)
         self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.center = initial_pos
@@ -325,6 +326,14 @@ class Tank(pygame.sprite.Sprite):
         elif self.rotationCounter == 330:
             self.rect.move_ip(2.5,4.3)
 
+    def _die(self):
+        self.screen.blit(self.explosion[0], self.rect.topleft)
+        self.screen.blit(self.explosion[0], self.rect.bottomright)
+        self.screen.blit(self.explosion[0], self.rect.center)
+        self.screen.blit(self.explosion[0], self.rect.topright)
+        self.screen.blit(self.explosion[0], self.rect.bottomleft)
+        self.kill()
+
     def _shoot(self):
         pass
 
@@ -357,7 +366,7 @@ class TankAI(Tank):
         self.turret.update(self.rect.center, self.rotationCounter)
 
         if spritecollide(self, shell_list, 'true'):
-            self.kill()
+            self._die()
         #Draw AI tank on screen
         self.screen.blit(self.image, self.rect)
         self.turret.shells.update()
