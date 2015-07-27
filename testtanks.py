@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+from pygame.sprite import spritecollide
 from load_images import *
 import random
 
@@ -11,7 +12,7 @@ class Shell(pygame.sprite.Sprite):
         self.image, self.rect = load_image('shell.bmp', -1)
         self.rect.center = initial_pos
         self.orientation = rotation
-    def update(self, enemy_rect):
+    def update(self):
 
         if self.orientation == 360 or self.orientation == 0:
             self.rect.move_ip(0,-15)
@@ -38,19 +39,18 @@ class Shell(pygame.sprite.Sprite):
         elif self.orientation == 330 or self.orientation == -30:
             self.rect.move_ip(-7.5,-12.9)
 
-        if self.rect.colliderect(enemy_rect):
-            print "Got a hit"
+
 
         if self.rect.left < 0:
             self.kill()
-        elif self.rect.right > 640:
+        elif self.rect.right > 1024:
             self.kill()
         if self.rect.top <= 0:
             self.kill()
-        elif self.rect.bottom >= 480:
+        elif self.rect.bottom >= 768:
             self.kill()
 class Turret(pygame.sprite.Sprite):
-    def __init__(self, initial_pos):
+    def __init__(self, screen, initial_pos):
         pygame.sprite.Sprite.__init__(self)
         self.images = load_images(['Turret1.bmp', 'Turret2.bmp', 'Turret3.bmp', 'Turret4.bmp'], -1)
         self.flashImages = load_images(['Fire1.bmp', 'Fire2.bmp', 'Fire3.bmp', 'Fire4.bmp'], -1)
@@ -62,16 +62,23 @@ class Turret(pygame.sprite.Sprite):
         self.rotationOffset = 0
         self.isShooting = 0
         self.shells = pygame.sprite.Group()
-        self.isFlashing = 0
+        # self.isFlashing = 0
+        self.screen = screen
 
     def update(self, center, rotation, input = ''):
         if input == 'tRight' or input == 'tLeft':
             self._rotate(rotation, input)
         self.rect.center = center
         self._rotate(rotation)
+
+        #screen.blit(self.image, self.rect)
+        self.screen.blit(self.image, self.rect)
+        self.shells.draw(self.screen)
+
+        #Call shooting method
         if self.isShooting:
             self._shoot()
-        #screen.blit(self.image, self.rect)
+
 
     def _rotate(self, rotation, direction = ''):
         #Track the offset from the chassis rotation
@@ -140,7 +147,10 @@ class Turret(pygame.sprite.Sprite):
             elif self.rotationCounter == 330 or self.rotationCounter == -30:
                 self.flash = pygame.transform.flip(self.flashImages[1], 1, 0)
 
-        self.isFlashing = 1
+
+
+
+        self.screen.blit(self.flash, self.flash.get_rect(center = self.rect.center))
 
 
 
@@ -150,16 +160,17 @@ class Turret(pygame.sprite.Sprite):
 
 
 class Tank(pygame.sprite.Sprite):
-    def __init__(self, initial_pos):
+    def __init__(self, screen, initial_pos):
         pygame.sprite.Sprite.__init__(self)
         self.images = load_images(['TankBase1.bmp','TankBase2.bmp','TankBase3.bmp','TankBase4.bmp'], -1)
         self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.center = initial_pos
-        self.turret = Turret(initial_pos)
+        self.turret = Turret(screen, initial_pos)
         self.rotationCounter = 360
+        self.screen = screen
 
-    def update(self, pressed):
+    def update(self, pressed=None):
         #move the tank
         #self.rect.move_ip((self.x_velocity, self.y_velocity))
         #Keep it inside the screen
@@ -201,15 +212,20 @@ class Tank(pygame.sprite.Sprite):
         #Keep the Player on the screen
         if self.rect.left < 0:
             self.rect.left = 0
-        elif self.rect.right > 640:
-            self.rect.right = 640
+        elif self.rect.right > 1024:
+            self.rect.right = 1024
         if self.rect.top <= 0:
             self.rect.top = 0
-        elif self.rect.bottom >= 480:
-            self.rect.bottom = 480
+        elif self.rect.bottom >= 768:
+            self.rect.bottom = 768
 
+        #Drawn Tank on screen
+        self.screen.blit(self.image, self.rect)
 
+        #Run tank's turret's update method (which draws the turret)
         self.turret.update(self.rect.center, self.rotationCounter)
+        self.turret.shells.update()
+
 
 
     def _move(self):
@@ -317,11 +333,11 @@ class Tank(pygame.sprite.Sprite):
 
 
 class TankAI(Tank):
-    def __init__(self, initial_pos):
-        Tank.__init__(self, initial_pos)
+    def __init__(self, screen, initial_pos):
+        Tank.__init__(self, screen, initial_pos)
         self.directions = ('left','right', '', '', '', '', '', '')
 
-    def update(self):
+    def update(self, shell_list=None):
         random_move = self.directions[random.randint(0,7)]
         if random_move:
             self._rotate(random_move)
@@ -329,13 +345,19 @@ class TankAI(Tank):
         self._move()
 
         #Keep the AI on the screen
-        if self.rect.left < 0:
+        if self.rect.left <= 0:
             self._rotate('right')
-        elif self.rect.right > 640:
+        elif self.rect.right >= 1024:
             self._rotate('left')
         if self.rect.top <= 0:
             self._rotate('left')
-        elif self.rect.bottom >= 480:
+        elif self.rect.bottom >= 768:
             self._rotate('left')
 
         self.turret.update(self.rect.center, self.rotationCounter)
+
+        if spritecollide(self, shell_list, 'true'):
+            self.kill()
+        #Draw AI tank on screen
+        self.screen.blit(self.image, self.rect)
+        self.turret.shells.update()

@@ -3,17 +3,24 @@ from pygame.locals import *
 from testtanks import Tank, TankAI
 
 pygame.init()
-screen = pygame.display.set_mode([640, 480])
+screen = pygame.display.set_mode([1024, 768])
 pygame.display.set_caption('Tank Game')
 
-t = Tank([50,50])
-t_AI = TankAI([200,200])
+t = Tank(screen, [50,50])
+t_AI = TankAI(screen, [200,200])
+
+player_sprites = pygame.sprite.Group()
+player_sprites.add(t)
+
+AI_sprites = pygame.sprite.Group()
+AI_sprites.add(t_AI)
+
 running = 1
 #pygame.key.set_repeat(100, 200)
 clock = pygame.time.Clock()
 background = pygame.Surface(screen.get_size())
 background = background.convert()
-background.fill((200, 200, 200))
+background.fill((136, 225, 136))
 
 
 while running:
@@ -26,29 +33,11 @@ while running:
             running = 0
     pressed = pygame.key.get_pressed()
 
-
-
-    t.update(pressed)
-    t_AI.update()
-
     screen.blit(background, (0, 0))
 
-    t.turret.shells.update(t_AI.rect)
-    t_AI.turret.shells.update()
+    player_sprites.update(pressed)
+    AI_sprites.update(t.turret.shells)
 
-    if t.turret.isFlashing:
-        t.turret.shells.draw(screen)
-        screen.blit(t.turret.flash, t.turret.flash.get_rect(center = t.turret.rect.center))
-        t.turret.isFlashing = 0
-    elif t.turret.flash and t.turret.isFlashing == 0:
-        screen.blit(background, t.turret.flash.get_rect(center = t.turret.rect.center))
-        t.turret.shells.draw(screen)
-
-    screen.blit(t.image, t.rect)
-    screen.blit(t.turret.image, t.turret.rect)
-
-    screen.blit(t_AI.image, t_AI.rect)
-    screen.blit(t_AI.turret.image, t_AI.turret.rect)
 
     if pygame.font:
         font = pygame.font.Font(None, 36)
